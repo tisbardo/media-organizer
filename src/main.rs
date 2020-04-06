@@ -40,16 +40,14 @@ impl Episode {
             Episode {
                 path: String::from(path),
                 normalized_show_name: normalize_show_name(&captures[1]),
-                season_number: 0,
-                episode_number: 0
+                season_number: captures[2].parse().unwrap(),
+                episode_number: captures[3].parse().unwrap()
             }
         })
     }
 }
 
 fn main() {
-    println!("Hello, world!");
-
     let input_dir = env::var("INPUT_DIR").expect("You must define INPUT_DIR environment variable");
     let library_dir = env::var("LIBRARY_DIR").expect("You must define LIBRARY_DIR environment variable");
 
@@ -58,8 +56,7 @@ fn main() {
     let files = get_input_dir_files(input_dir.as_str());
     let shows = get_series_in_library(library_dir.as_str());
 
-//    for file in files { println!("{}", file.to_str().unwrap()) }
-//    for show in shows { println!("{}", file.to_str().unwrap()) }
+    move_files(&files, &shows);
 }
 
 fn get_input_dir_files(input_dir: &str) -> Vec<Episode> {
@@ -80,4 +77,16 @@ fn get_series_in_library(library_dir: &str) -> Vec<TvShow> {
 
 fn normalize_show_name(name: &str) -> String {
     name.replace(&['.', ' '][..], "")
+}
+
+fn move_files(files: &Vec<Episode>, shows: &Vec<TvShow>) {
+    for file in files {
+        shows.iter()
+            .find(|&show| show.normalized_name == file.normalized_show_name)
+            .map(|show| move_file(file, &show));
+    }
+}
+
+fn move_file(file: &Episode, show: &TvShow) {
+    println!("Move {} to {}", file.path, show.path);
 }

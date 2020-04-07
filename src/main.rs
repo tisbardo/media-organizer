@@ -5,17 +5,38 @@ use regex::Regex;
 
 
 struct TvShow {
-    normalized_name: String,
     path: String,
+    normalized_name: String,
+    seasons: Vec<Season>
 }
 
 impl TvShow {
-    pub fn new(path: OsString) -> TvShow {
+    pub fn new(path: OsString, seasons: Vec<Season>) -> TvShow {
         let path = path.to_str().unwrap();
         TvShow {
             path: String::from(path),
-            normalized_name: normalize_show_name(path)
+            normalized_name: normalize_show_name(path),
+            seasons,
         }
+    }
+}
+
+struct Season {
+    path: String,
+    season_number: u16,
+}
+
+impl Season {
+    pub fn parse(path: OsString) -> Option<Season> {
+        let path = path.to_str().unwrap();
+        let regex = Regex::new(r"(\d{1,2})").unwrap();
+
+        regex.captures(path).map(|captures| {
+            Season {
+                path: String::from(path),
+                season_number: captures[1].parse().unwrap()
+            }
+        })
     }
 }
 
@@ -34,9 +55,6 @@ impl Episode {
         let x_regex = Regex::new(r"^(.+[^\d])(\d{1,2})x(\d{1,2})[^\d]").unwrap();
 
         se_regex.captures(path).or(x_regex.captures(path)).map(|captures| {
-
-            println!("Show name: {} Season: {} Episode: {}", &captures[1], &captures[2], &captures[3]);
-
             Episode {
                 path: String::from(path),
                 normalized_show_name: normalize_show_name(&captures[1]),
@@ -70,9 +88,22 @@ fn get_input_dir_files(input_dir: &str) -> Vec<Episode> {
 }
 
 fn get_series_in_library(library_dir: &str) -> Vec<TvShow> {
-    return fs::read_dir(library_dir).expect("Cannot read library_dir").map(|file| {
-        TvShow::new(file.expect("cannot read file").file_name())
-    }).collect()
+    fs::read_dir(library_dir)
+        .expect("Cannot read library_dir")
+        .filter_map(|tv_show_dir| {
+            let tv_show_dir = tv_show_dir.expect("cannot read file");
+            if tv_show_dir.path().is_dir() {
+                let seasons = fs::read_dir(tv_show_dir.path()).unwrap()
+                    .flat_map(|dir| {
+                        dir.ok().map(|dir| Season::parse(dir.file_name())).flatten()
+                    }).collect();
+
+                Some(TvShow::new(tv_show_dir.file_name(), seasons))
+            } else {
+                None
+            }
+        })
+        .collect()
 }
 
 fn normalize_show_name(name: &str) -> String {

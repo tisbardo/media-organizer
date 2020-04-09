@@ -1,69 +1,10 @@
 use std::env;
 use std::fs;
-use std::ffi::OsString;
-use regex::Regex;
 
-
-struct TvShow {
-    path: String,
-    normalized_name: String,
-    seasons: Vec<Season>
-}
-
-impl TvShow {
-    pub fn new(path: OsString, seasons: Vec<Season>) -> TvShow {
-        let path = path.to_str().unwrap();
-        TvShow {
-            path: String::from(path),
-            normalized_name: normalize_show_name(path),
-            seasons,
-        }
-    }
-}
-
-struct Season {
-    path: String,
-    season_number: u16,
-}
-
-impl Season {
-    pub fn parse(path: OsString) -> Option<Season> {
-        let path = path.to_str().unwrap();
-        let regex = Regex::new(r"(\d{1,2})").unwrap();
-
-        regex.captures(path).map(|captures| {
-            Season {
-                path: String::from(path),
-                season_number: captures[1].parse().unwrap()
-            }
-        })
-    }
-}
-
-struct Episode {
-    path: String,
-    normalized_show_name: String,
-    season_number: u16,
-    episode_number: u16,
-}
-
-impl Episode {
-    pub fn parse(path: OsString) -> Option<Episode> {
-        let path = path.to_str().unwrap();
-
-        let se_regex = Regex::new(r"^(.+)S(\d{1,2})E(\d{1,2})").unwrap();
-        let x_regex = Regex::new(r"^(.+[^\d])(\d{1,2})x(\d{1,2})[^\d]").unwrap();
-
-        se_regex.captures(path).or(x_regex.captures(path)).map(|captures| {
-            Episode {
-                path: String::from(path),
-                normalized_show_name: normalize_show_name(&captures[1]),
-                season_number: captures[2].parse().unwrap(),
-                episode_number: captures[3].parse().unwrap()
-            }
-        })
-    }
-}
+mod media;
+use media::TvShow;
+use media::Episode;
+use media::Season;
 
 fn main() {
     let input_dir = env::var("INPUT_DIR").expect("You must define INPUT_DIR environment variable");
@@ -104,10 +45,6 @@ fn get_series_in_library(library_dir: &str) -> Vec<TvShow> {
             }
         })
         .collect()
-}
-
-fn normalize_show_name(name: &str) -> String {
-    name.replace(&['.', ' '][..], "")
 }
 
 fn move_files(files: &Vec<Episode>, shows: &Vec<TvShow>) {

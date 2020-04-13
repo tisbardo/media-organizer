@@ -56,14 +56,20 @@ fn get_series_in_library(library_dir: &str) -> Vec<TvShow> {
         .collect()
 }
 
-fn move_files(files: &Vec<Episode>, shows: &Vec<TvShow>) {
-    for file in files {
+fn move_files(episodes: &Vec<Episode>, shows: &Vec<TvShow>) {
+    for episode in episodes {
         shows.iter()
-            .find(|&show| show.normalized_name == file.normalized_show_name)
-            .map(|show| move_file(file, &show));
+            .find(|&show| show.normalized_name == episode.normalized_show_name)
+            .map(|show| {
+                let season = show.seasons.iter()
+                    .find(|&season| season.season_number == episode.season_number);
+
+                move_file(episode, &show, season)
+            });
     }
 }
 
-fn move_file(file: &Episode, show: &TvShow) {
-    println!("Move {} to {}", file.path, show.path);
+fn move_file(file: &Episode, show: &TvShow, season: Option<&Season>) {
+    let path = format!("{}{}", show.path, &season.map_or_else(|| "".to_owned(), |s| format!("{}{}", "/", &s.path)));
+    println!("Move {} to {}", file.path, path);
 }

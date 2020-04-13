@@ -1,5 +1,7 @@
 use std::env;
 use std::fs;
+use std::thread;
+use std::time::Duration;
 
 mod media;
 use media::TvShow;
@@ -10,12 +12,18 @@ fn main() {
     let input_dir = env::var("INPUT_DIR").expect("You must define INPUT_DIR environment variable");
     let library_dir = env::var("LIBRARY_DIR").expect("You must define LIBRARY_DIR environment variable");
 
-    println!("Start watching input directory {} and put into library {}", input_dir, library_dir);
+    println!("Start watching new Episodes in directory {} to move into library {}", input_dir, library_dir);
 
-    let files = get_input_dir_files(input_dir.as_str());
-    let shows = get_series_in_library(library_dir.as_str());
+    loop {
+        println!("Start checking");
 
-    move_files(&files, &shows);
+        let files = get_input_dir_files(input_dir.as_str());
+        let shows = get_series_in_library(library_dir.as_str());
+
+        move_files(&files, &shows);
+
+        thread::sleep(Duration::from_millis(30 * 1000));
+    }
 }
 
 fn get_input_dir_files(input_dir: &str) -> Vec<Episode> {
@@ -70,6 +78,12 @@ fn move_files(episodes: &Vec<Episode>, shows: &Vec<TvShow>) {
 }
 
 fn move_file(file: &Episode, show: &TvShow, season: Option<&Season>) {
-    let path = format!("{}{}", show.path, &season.map_or_else(|| "".to_owned(), |s| format!("{}{}", "/", &s.path)));
+    let mut path = String::new();
+    path.push_str(&show.path);
+
+    if season.is_some() {
+        path.push_str(&format!("{}{}", "/", &season.unwrap().path));
+    }
+
     println!("Move {} to {}", file.path, path);
 }

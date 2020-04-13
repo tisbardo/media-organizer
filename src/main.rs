@@ -19,13 +19,22 @@ fn main() {
 }
 
 fn get_input_dir_files(input_dir: &str) -> Vec<Episode> {
-    return fs::read_dir(input_dir)
-        .expect("Cannot read input_dir")
-        .map(|file| {
-            Episode::parse(file.expect("cannot read file").file_name())
-        })
-        .filter_map(|x| x) // Remove None
-        .collect()
+    let mut episodes: Vec<Episode> = Vec::new();
+
+    for file in fs::read_dir(input_dir).expect("Cannot read input_dir") {
+        let file = file.expect("cannot read file");
+        if file.path().is_dir() {
+            // Explore recursively the folder
+            file.path().to_str()
+                .map(|f| episodes.append(&mut get_input_dir_files(f)) );
+        } else {
+            // Try to parse filename into an Episode and add to list
+            Episode::parse(file.file_name())
+                .map(|e| episodes.push(e));
+        }
+    };
+
+    episodes
 }
 
 fn get_series_in_library(library_dir: &str) -> Vec<TvShow> {

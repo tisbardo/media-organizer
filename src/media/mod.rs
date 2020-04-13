@@ -9,5 +9,7 @@ pub use episode::Episode;
 pub use tv_show::TvShow;
 
 fn normalize_show_name(name: &str) -> String {
-    name.replace(&['.', ' '][..], "")
+    name
+        .to_lowercase()
+        .replace(&['.', ' '][..], "")
 }

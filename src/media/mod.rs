@@ -36,10 +36,10 @@ impl MediaOrganizer {
         }
     }
 
-    fn get_input_dir_files(input_dir: &str) -> Vec<Episode> {
+    fn get_input_dir_files(directory: &str) -> Vec<Episode> {
         let mut episodes: Vec<Episode> = Vec::new();
 
-        for file in fs::read_dir(input_dir).expect("Cannot read input_dir") {
+        for file in fs::read_dir(directory).expect("Cannot read input_dir") {
             let file = file.expect("cannot read file");
             if file.path().is_dir() {
                 // Explore recursively the folder
@@ -47,7 +47,7 @@ impl MediaOrganizer {
                     .map(|f| episodes.append(&mut MediaOrganizer::get_input_dir_files(f)) );
             } else {
                 // Try to parse filename into an Episode and add to list
-                Episode::parse(file.file_name())
+                Episode::parse(file.path().to_str().unwrap(), file.file_name())
                     .map(|e| episodes.push(e));
             }
         };
@@ -88,17 +88,15 @@ impl MediaOrganizer {
     }
 
     fn move_file(&self, file: &Episode, show: &TvShow, season: Option<&Season>) {
-//        let from = format!("{}{}", );
-        let mut path = String::new();
-        path.push_str(&show.path);
-
+        let mut to = format!("{}/{}", &self.library_dir, &show.path);
         if season.is_some() {
-            path.push_str(&format!("{}{}", "/", &season.unwrap().path));
+            to.push_str(&format!("/{}", &season.unwrap().path));
         }
+        to.push_str(&format!("/{}", &file.filename));
 
-        match fs::rename(&file.path, &path) {
-            Ok(_) => println!("Moved {} to {}", &file.path, &path),
-            Err(error) => println!("Error while moving {} to {} : {}", &file.path, &path, error)
+        match fs::rename(&file.path, &to) {
+            Ok(_) => println!("Moved {} to {}", &file.path, &to),
+            Err(error) => println!("Error while moving {} to {} : {}", &file.path, &to, error)
         }
     }
 }

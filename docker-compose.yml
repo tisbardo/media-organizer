@@ -1,0 +1,9 @@
+version: '3'
+services:
+  # Tool / services
+  media-organizer:
+    build:
+      context: .
+    volumes:
+      - ../media-organizer-tests/downloads:/input
+      - ../media-organizer-tests/library:/library

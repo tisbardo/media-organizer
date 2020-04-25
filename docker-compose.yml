@@ -5,5 +5,7 @@ services:
     build:
       context: .
     volumes:
-      - ../media-organizer-tests/downloads:/input
-      - ../media-organizer-tests/library:/library
+      - ../media-organizer-tests:/files
+    environment:
+      - INPUT_DIR=/files/downloads
+      - LIBRARY_DIR=/files/library

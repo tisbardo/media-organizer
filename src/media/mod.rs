@@ -14,7 +14,7 @@ use std::time::Duration;
 fn normalize_show_name(name: &str) -> String {
     name
         .to_lowercase()
-        .replace(&['.', ' '][..], "")
+        .replace(&['.', ' ', '-'][..], "")
 }
 
 pub struct MediaOrganizer {

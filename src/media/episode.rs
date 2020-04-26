@@ -11,8 +11,16 @@ pub struct Episode {
 }
 
 impl Episode {
+
+    /*
+     * This function analyses the filenames found in the input directory to find TvShow Episodes
+     * It returns an Episode object if the filename seems to be an episode of a tv show (eg: Show.Name.S02E03.Episode.Name.mkv)
+     * Filters filenames ending with ".part"
+     */
     pub fn parse(path: &str, filename: OsString) -> Option<Episode> {
         let filename = filename.to_str().unwrap();
+
+        if path.ends_with(".part") { return None; }
 
         let se_regex = Regex::new(r"^(.+)S(\d{1,2})E(\d{1,2})").unwrap();
         let x_regex = Regex::new(r"^(.+[^\d])(\d{1,2})x(\d{1,2})[^\d]").unwrap();

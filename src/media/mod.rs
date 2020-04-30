@@ -63,7 +63,10 @@ impl MediaOrganizer {
                 if tv_show_dir.path().is_dir() {
                     let seasons = fs::read_dir(tv_show_dir.path()).unwrap()
                         .flat_map(|dir| {
-                            dir.ok().map(|dir| Season::parse(dir.file_name())).flatten()
+                            dir.ok()
+                                .filter(|dir| dir.path().is_dir())
+                                .map(|dir| Season::parse(dir.file_name()))
+                                .flatten()
                         }).collect();
 
                     Some(TvShow::new(tv_show_dir.file_name(), seasons))
